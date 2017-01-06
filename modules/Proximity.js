@@ -4,14 +4,14 @@
 * (Obvious caveat - doesn't work well in dimly lit environments).
 *
 * Emits two events:
-* 'close' - when an object approaches
+* 'near' - when an object approaches
 * 'far' - when an object moves away
 */
 
 var AVG_WND = 10;
 var FLIP_FACTOR = 2;
 
-var lightArr, lightDif, lightAvg, close, c, ivl;
+var lightArr, lightDif, lightAvg, near, c, ivl;
 
 var params = {
   // update frequency (Hz)
@@ -32,14 +32,14 @@ function updateLightStats(l) {
 
 function proximity() {
   let l = Puck.light();
-  if(!close) {
+  if(!near) {
     if(lightAvg - l > FLIP_FACTOR * lightDif) {
-      close = true;
-      Proximity.emit("close");
+      near = true;
+      Proximity.emit("near");
     } else updateLightStats(l);
   } else {
     if(lightAvg - l < FLIP_FACTOR * lightDif) {
-      close = false;
+      near = false;
       Proximity.emit("far");
     }
   }
@@ -49,7 +49,7 @@ function start() {
   lightArr = [0.5];
   lightDif = 0;
   lightAvg = 0;
-  close = false;
+  near = false;
   c = 1;
   ivl = setInterval(proximity, 1000/params.freq);
 }

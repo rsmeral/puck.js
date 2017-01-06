@@ -16,7 +16,7 @@ Knob.on("minus", Hid.volumeDown);
 
 if(POWER_SAVE) {
   Knob.on("calibrated", ()=>{Prox.start(); Knob.stop();});
-  Prox.on("close", Knob.resume);
+  Prox.on("near", Knob.resume);
   Prox.on("far", Knob.stop);
 }
 

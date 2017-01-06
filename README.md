@@ -54,7 +54,7 @@ Built-in functions:
 
 ### :wave: Proximity
 ```javascript
-Prox.on("close", ()=>console.log("Light suddenly obstructed - some object most likely got close to me."));
+Prox.on("near", ()=>console.log("Light suddenly obstructed - some object most likely got close to me."));
 Prox.on("far", ()=>console.log("Ahh, light back on - obstruction removed."));
 ```
 
@@ -62,7 +62,7 @@ Emulates a proximity sensor by using the light sensor. Continuously adapts to li
 (Obvious caveat - doesn't work well in dimly lit environments).
 
 Emits two events:
-* `close` - when an object approaches
+* `near` - when an object approaches
 * `far` - when an object moves away
 
 ### :arrows_counterclockwise: Scroll Wheel
