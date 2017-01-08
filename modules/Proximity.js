@@ -8,61 +8,51 @@
 * 'far' - when an object moves away
 */
 
-var AVG_WND = 10;
-var FLIP_FACTOR = 2;
-
-var lightArr, lightDif, lightAvg, near, c, ivl;
+var arr, avg, near, c, d, ivl;
 
 var params = {
   // update frequency (Hz)
-  freq: 2
+  // higher freq. increases responsiveness, but decreases reliability
+  freq: 2,
+  // average window size
+  // smaller window increases responsiveness, but decreases reliability
+  denoise: 3,
+  // flip threshold as percentage  of average light (value in <0,1>)
+  thresh: 0.8,
+  // minimum number of milliseconds between flips
+  debounce: 200
 };
 
-var Proximity = {};
+var Prox = {
+  start: function(){
+    arr = new Float32Array(params.denoise);
+    avg = Puck.light();
+    near = -1;
+    c = d = 0;
+    arr[c++] = avg;
+    ivl = setInterval(prox, 1000/params.freq, params.thresh, params.denoise, params.debounce/1000,arr);
+  },
+  stop: function(){
+    if(ivl) clearInterval(ivl);
+    ivl = null;
+  }
+};
 
-var mergeObj = function(tgt, src){Object.keys(src).forEach(e=>tgt[e]=src[e])};
-
-function updateLightStats(l) {
-  lightArr[c++%AVG_WND] = l;
-  let lightMin = lightArr.reduce((min, v) => Math.min(min, v), 1);
-  let lightMax = lightArr.reduce((max, v) => Math.max(max, v), 0);
-  lightDif = lightMax-lightMin;
-  lightAvg = E.sum(lightArr) / lightArr.length;
-}
-
-function proximity() {
+function prox(th,dn,db,ar) {
   let l = Puck.light();
-  if(!near) {
-    if(lightAvg - l > FLIP_FACTOR * lightDif) {
-      near = true;
-      Proximity.emit("near");
-    } else updateLightStats(l);
-  } else {
-    if(lightAvg - l < FLIP_FACTOR * lightDif) {
-      near = false;
-      Proximity.emit("far");
-    }
+  
+  if((near*(l-avg*th) > 0) && getTime()-d > db) {
+    near *= -1;
+    Prox.emit(near>0?"near":"far");
+    d=getTime();
+  }
+  if(near<0) {
+    ar[c++%dn] = l;
+    avg = E.sum(ar)/dn;
   }
 }
 
-function start() {
-  lightArr = [0.5];
-  lightDif = 0;
-  lightAvg = 0;
-  near = false;
-  c = 1;
-  ivl = setInterval(proximity, 1000/params.freq);
-}
-
-function stop() {
-  if(ivl) clearInterval(ivl);
-  ivl = null;
-}
-
-Proximity.start = start;
-Proximity.stop = stop;
-
 exports = function(_params) {
-  mergeObj(params, _params);
-  return Proximity;
+  Object.keys(_params).forEach(e=>params[e]=_params[e]);
+  return Prox;
 };
