@@ -15,6 +15,10 @@ Works horizontally and vertically (or in any other plane).
 Needs calibration - rotate the Puck 360 degrees in a single plane.
 */
 
+var notchSize, lastNotchAngle, angle, calibrated, calibTimeout, c;
+// mag stats
+var arr, min, max, val;
+
 var params = {
   // number of steps per full circle
   notches: 10,
@@ -24,93 +28,77 @@ var params = {
   // duration of calibration phase
   calibrationDuration: 4000,
   // magnetometer sample rate
-  magSampleRate: 10,
+  magSampleRate: 5,
   // smoothing
-  avgWindowSize: 5
+  avgWindowSize: 3
 };
 
-var ScrollWheel = {};
+var ScrollWheel = {
+  start: function() {
+    arr = {y:[],z:[]};
+    min = {y:Infinity,z:Infinity};
+    max = {y:-Infinity,z:-Infinity};
+    val = {y:0,z:0};
+    
+    notchSize = 2*Math.PI/params.notches;
+    lastNotchAngle = angle = c = 0;
+    calibrated = false;
+    calibTimeout = setTimeout(calibrationFinished, params.calibrationDuration);
+    Puck.magOn(params.magSampleRate);
+  },
 
-var notchSize, lastNotchAngle = 0, angle = 0, calibrated, calibTimeout, notchInterval, c=0;
+  resume: function() {
+    Puck.magOn(params.magSampleRate);
+  },
 
-var mergeObj = (tgt, src)=>Object.keys(src).forEach(function(e){tgt[e]=src[e]});
-var sign = n=>n>0?1:-1;
-
-// mag stats
-var arr, min, max, val;
-
-function initMagStats() {
-  arr = {y:[],z:[]};
-  min = {y:Infinity,z:Infinity};
-  max = {y:-Infinity,z:-Infinity};
-  val = {y:0,z:0};
-}
-
-function updateMagStats(mag) {
-  ["y","z"].forEach(function(x) {
-    arr[x][c%params.avgWindowSize] = mag[x];
-    min[x] = Math.min(mag[x], min[x]);
-    max[x] = Math.max(mag[x], max[x]);
-    val[x] = ((E.sum(arr[x])/arr[x].length)-min[x])/(max[x]-min[x]);
-  });
-  c++;
-  angle = Math.atan2(val.z-0.5, val.y-0.5);
-}
-
-function report(dir,angle) {
-  lastNotchAngle = angle;
-  ScrollWheel.emit(dir==(params.inverse?-1:1)?"plus":"minus");
-  ScrollWheel.emit("notch", Math.floor(angle/(2*Math.PI/params.notches)));
-}
-
-var notchDetect = function() {
-  let dif = Math.abs(angle-lastNotchAngle);
-  let dir = sign(angle-lastNotchAngle);
-  if(dif > Math.PI) {
-    dif = Math.abs(dif-2*Math.PI);
-    dir = -dir;
+  stop: function() {
+    Puck.magOff();
+    if(calibTimeout) clearTimeout(calibTimeout);
   }
-  if(dif > notchSize) report(dir,angle);
-}
+};
 
 function calibrationFinished() {
   calibTimeout = null;
   calibrated = true;
   lastNotchAngle = angle;
-  notchInterval = setInterval(notchDetect, 1000/params.magSampleRate);
   ScrollWheel.emit("calibrated");
 }
 
-function start() {
-  initMagStats();
-  notchSize = 2*Math.PI/params.notches;
-  calibrated = false;
-  lastNotchAngle = 0;
-  angle = 0;
-  c = 0;
-  calibTimeout = setTimeout(calibrationFinished, params.calibrationDuration);
-  Puck.magOn(params.magSampleRate);
+function notchDetect(m) {
+  // detect angle
+  if(!calibrated) {
+    min.y = Math.min(m.y, min.y);
+    min.z = Math.min(m.z, min.z);
+    max.y = Math.max(m.y, max.y);
+    max.z = Math.max(m.z, max.z);
+    return;
+  }
+  arr.y[c%params.avgWindowSize] = m.y;
+  arr.z[c++%params.avgWindowSize] = m.z;
+  val.y = ((E.sum(arr.y)/params.avgWindowSize)-min.y)/(max.y-min.y);
+  val.z = ((E.sum(arr.z)/params.avgWindowSize)-min.z)/(max.z-min.z);
+
+  angle = Math.atan2(val.z-0.5, val.y-0.5);
+  
+  // detect notch
+  let dif = Math.abs(angle-lastNotchAngle);
+  let dir = angle>lastNotchAngle;
+  if(dif > Math.PI) {
+    dif = Math.abs(dif-2*Math.PI);
+    dir = !dir;
+  }
+  
+  // report
+  if(dif > notchSize) {
+    lastNotchAngle = angle;
+    ScrollWheel.emit(dir!=params.inverse?"plus":"minus");
+    ScrollWheel.emit("notch", Math.floor(angle/(2*Math.PI/params.notches)));
+  }
 }
 
-function resume() {
-  Puck.magOn(params.magSampleRate);
-  notchInterval = setInterval(notchDetect, 1000/params.magSampleRate);
-}
-
-function stop() {
-  Puck.magOff();
-  if(calibTimeout) clearTimeout(calibTimeout);
-  if(notchInterval) clearInterval(notchInterval);
-  notchInterval = null;
-}
-
-ScrollWheel.start = start;
-ScrollWheel.stop = stop;
-ScrollWheel.resume = resume;
-
-Puck.on("mag", updateMagStats);
+Puck.on("mag", notchDetect);
 
 exports = function(_params) {
-  mergeObj(params, _params);
+  Object.keys(_params).forEach(function(e){params[e]=_params[e]});
   return ScrollWheel;
 };
