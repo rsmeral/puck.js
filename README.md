@@ -29,21 +29,20 @@ Emits events for button presses:
 ```javascript
 Lights.pulsing().color(Lights.BLUE).when(Button, "down").until(Button, "up");
 Lights.blip(Lights.CYAN, 500);
-Lights.steady().rainbow().now().for(5000);
 ```
 
 Simple API for controlling the LEDs.
 (Currently WIP - started hitting performance limits of the board, so optimizations underway, but generally works.)
 
 Built-in functions:
+* Shorthand:
+  * `blip(color,duration)`: same as `Lights.steady().color(color).now().for(duration)`
 * Brightness:
   * `steady()`: constant 100% brightness
   * `pulsing(speed, lower_bound)`: sinusoidal pulsing effect, with a adjustable speed (default 1s per cycle) and lower bound (default 0%)
   * `blinking(speed, lower_bound)`: simple blinking (_high-low-high-low..._) effect, with a adjustable speed (default 1s per cycle) and lower bound (default 0%)
 * Color:
   * `color(clr)`: single color, as an array of `[R, G, B]` as values from `<0,1>`, or constants defined on `Lights` (`BLACK`, `RED`, `GREEN`, `BLUE`, `CYAN`, `MAGENTA`, `YELLOW`)
-  * `rainbow(speed)`: cycle through the color spectrum, with a adjustable speed (default 1s per cycle)
-  * `pearly(axis,transition)`: (Experimental) Emulates a pearlescent effect by changing colors based on device rotation
 * Start:
   * `now()`: start immediately
   * `after(ms)`: start after given number of milliseconds
@@ -51,6 +50,20 @@ Built-in functions:
 * End:
   * `for(ms)`: stop after given number of milliseconds
   * `until(object,event)`: stops when the given event (string) is emitted by the given object
+
+#### Extra functions
+More functions are available in a separate `LightsExtra` module.
+
+```javascript
+var Lights = require("https://raw.githubusercontent.com/rsmeral/puck.js/master/modules/Lights.js")();
+require("https://raw.githubusercontent.com/rsmeral/puck.js/master/modules/LightsExtra.js")(Lights);
+
+Lights.steady().rainbow(0.5).now().for(5000);
+```
+
+Color:
+* `rainbow(speed)`: cycle through the color spectrum, with a adjustable speed (default 1s per cycle)
+* `pearly(axis,transition)`: (Experimental) Emulates a pearlescent effect by changing colors based on device rotation
 
 ### :wave: Proximity
 ```javascript
