@@ -82,7 +82,7 @@ var Runner = (function(){
   var start = function() {
     if(!running) {
       blendFunc = BLEND_FUNCS[Lights.params.blend];
-      stackInterval = setInterval(processStack, 1000/Lights.params.stackFreq);
+      stackInterval = setInterval(processStack, 1000/Lights.params.freq);
       running = true;
     }
   };
