@@ -69,16 +69,6 @@ var Runner = (function(){
     }
   };
 
-  var remove = function(prg) {
-    [when, until].forEach(
-      function(a){
-        (function(b) {
-          b.length && a.splice(a.indexOf(b[0]),1) && b[0].obj.removeListener(b[0].evt,b[0].lsn);
-        })(a.filter(function(e) {return e.prg==prg;}));
-      }
-    );
-  };
-
   var start = function() {
     if(!running) {
       blendFunc = BLEND_FUNCS[Lights.params.blend];
@@ -95,7 +85,7 @@ var Runner = (function(){
     }
   };
 
-  return {add: add, remove: remove, start: start, stop: stop, addWhen: addLsnrFunc(when), addUntil: addLsnrFunc(until)};
+  return {add: add, start: start, stop: stop, addWhen: addLsnrFunc(when), addUntil: addLsnrFunc(until)};
 })();
 
 /*  PROGRAM  */
@@ -104,6 +94,7 @@ var Runner = (function(){
 function Program(opts) {
   Util.mrgObj(this,opts||{});
   this.terminated = false;
+  this.ended = function() { return false; };
 }
 
 Program.prototype = {
@@ -125,7 +116,6 @@ Program.prototype = {
   },
 
   until: function(obj,evt) {
-    this.ended = function() { return false; };
     var lsnr = this.stop.bind(this);
     obj.on(evt, lsnr);
 

@@ -34,24 +34,28 @@ Lights.blip(Lights.CYAN, 500);
 Simple API for controlling the LEDs.
 (Currently WIP - started hitting performance limits of the board, so optimizations underway, but generally works.)
 
-Built-in functions:
-* Shorthand:
-  * `blip(color,duration)`: same as `Lights.steady().color(color).now().for(duration)`
-* Brightness:
-  * `steady()`: constant 100% brightness
-  * `pulsing(speed, lower_bound)`: sinusoidal pulsing effect, with a adjustable speed (default 1s per cycle) and lower bound (default 0%)
-  * `blinking(speed, lower_bound)`: simple blinking (_high-low-high-low..._) effect, with a adjustable speed (default 1s per cycle) and lower bound (default 0%)
-* Color:
-  * `color(clr)`: single color, as an array of `[R, G, B]` as values from `<0,1>`, or constants defined on `Lights` (`BLACK`, `RED`, `GREEN`, `BLUE`, `CYAN`, `MAGENTA`, `YELLOW`)
-* Start:
-  * `now()`: start immediately
-  * `after(ms)`: start after given number of milliseconds
-  * `when(object,event)`: triggered by the given event (string) emitted by the given object
-* End:
-  * `for(ms)`: stop after given number of milliseconds
-  * `until(object,event)`: stops when the given event (string) is emitted by the given object
+Each call adds a _program_ to a stack. For example, the following will result in a steady red color for five seconds, with a blue light blinking at the same time.
 
-#### Extra functions
+```javascript
+Lights.steady().color(Lights.RED).for(5000).now();
+Lights.blinking().color(Lights.BLUE).for(5000).now();
+```
+
+Each program must have a brightness, color, start, and end function.
+
+#### Shorthand function
+* `blip(color,duration)`: same as `Lights.steady().color(color).now().for(duration)`
+
+#### Brightness functions
+* `steady()`: constant 100% brightness
+* `pulsing(speed, lower_bound)`: sinusoidal pulsing effect, with a adjustable speed (default 1s per cycle) and lower bound (default 0%)
+* `blinking(speed, lower_bound)`: simple blinking (_high-low-high-low..._) effect, with a adjustable speed (default 1s per cycle) and lower bound (default 0%)
+  
+#### Color function
+* `color(clr)`: single color, as an array of `[R, G, B]` as values from `<0,1>`, or constants defined on `Lights` (`BLACK`, `RED`, `GREEN`, `BLUE`, `CYAN`, `MAGENTA`, `YELLOW`)
+  
+##### More color functions
+
 More functions are available in a separate `LightsExtra` module.
 
 ```javascript
@@ -61,9 +65,17 @@ require("https://raw.githubusercontent.com/rsmeral/puck.js/master/modules/Lights
 Lights.steady().rainbow(0.5).now().for(5000);
 ```
 
-Color:
 * `rainbow(speed)`: cycle through the color spectrum, with a adjustable speed (default 1s per cycle)
 * `pearly(axis,transition)`: (Experimental) Emulates a pearlescent effect by changing colors based on device rotation
+  
+#### Start functions
+* `now()`: start immediately
+* `after(ms)`: start after given number of milliseconds
+* `when(object,event)`: triggered by the given event (string) emitted by the given object
+
+#### End functions 
+* `for(ms)`: stop after given number of milliseconds
+* `until(object,event)`: stops when the given event (string) is emitted by the given object
 
 ### :wave: Proximity
 ```javascript
