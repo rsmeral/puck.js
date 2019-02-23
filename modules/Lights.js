@@ -99,7 +99,7 @@ function Program(opts) {
 
 Program.prototype = {
   // control
-  isRunning: () => !this.terminated && !this.ended(this),
+  isRunning: function() { return !this.terminated && !this.ended(this) },
 
   stop: function() {this.terminated = true;},
 
