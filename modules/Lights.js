@@ -34,11 +34,11 @@ var Runner = (function(){
   var color = [0,0,0];
 
   var processStack = function() {
-    Util.blip(color, 1000/Lights.params.freq);
     stack = stack.filter(function(p){ let r=p.isRunning(); if(!r&&p.onStop) p.onStop(p); return r; });
-    if(stack.length)
+    if(stack.length) {
       color = Lights.params.blend == "normal"? stack[stack.length-1].getColor() : stack.reduce(function(clr,prg){return blendFunc(clr,prg.getColor());}, Lights.BLACK);
-    else Runner.stop();
+      Util.blip(color, 1000/Lights.params.freq);
+    } else Runner.stop();
   };
 
   var addLsnrFunc = function(lsnrArr) {
