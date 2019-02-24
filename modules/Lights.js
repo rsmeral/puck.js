@@ -47,6 +47,10 @@ var Runner = (function(){
     };
   }
 
+  var removeListeners = function(lsnrArr) {
+    lsnrArr.forEach(l => l.obj.removeListener(l.evt, l.lsn));
+  }
+
   var add = function(prg) {
     if(stack.indexOf(prg) == -1) {
       prg.startedAt = getTime();
@@ -85,7 +89,13 @@ var Runner = (function(){
     }
   };
 
-  return {add: add, start: start, stop: stop, addWhen: addLsnrFunc(when), addUntil: addLsnrFunc(until)};
+  var reset = function() {
+    stop();
+    removeListeners(when);
+    removeListeners(until);
+  }
+
+  return {add: add, start: start, stop: stop, addWhen: addLsnrFunc(when), addUntil: addLsnrFunc(until), reset: reset};
 })();
 
 /*  PROGRAM  */
