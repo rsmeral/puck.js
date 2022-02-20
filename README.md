@@ -1,6 +1,6 @@
 # Puck.js Modules and Examples
 
-A set of pretty APIs for using Puck's features.
+A set of pretty APIs for some features of [Puck.js](https://www.puck-js.com/).
 
 **Modules:**
 * [:radio_button: Button](#radio_button-button)
